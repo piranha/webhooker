@@ -66,7 +66,7 @@ type Config map[string]Rules
 
 /// Config
 
-func (c *Config) Parse(input []string) error {
+func (c Config) Parse(input []string) error {
 	RuleRe := regexp.MustCompile("(.+/.+):(.+)=(.+)")
 
 	for _, line := range input {
@@ -76,16 +76,16 @@ func (c *Config) Parse(input []string) error {
 		}
 
 		name := bits[1]
-		if _, ok := (*c)[name]; !ok {
-			(*c)[name] = make(Rules, 0)
+		if _, ok := c[name]; !ok {
+			c[name] = make(Rules, 0)
 		}
-		(*c)[name] = append((*c)[name], Rule{bits[2], bits[3]})
+		c[name] = append(c[name], Rule{bits[2], bits[3]})
 	}
 
 	return nil
 }
 
-func (c *Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
+func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	var data GithubPayload
 	err := json.Unmarshal([]byte(r.FormValue("payload")), &data)
 	if err != nil {
@@ -96,7 +96,7 @@ func (c *Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 	name := fmt.Sprintf("%s/%s",
 		data.Repository.Owner.Name, data.Repository.Name)
-	rules, ok := (*c)[name]
+	rules, ok := c[name]
 	if !ok {
 		return
 	}
