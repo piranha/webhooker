@@ -6,8 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
-	logmod "log"
-	"log/syslog"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -22,11 +21,9 @@ var Version = "0.1"
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"" description:"ip to listen on"`
 	Port      string `short:"p" long:"port" default:"8000" description:"port to listen on"`
-	Log       string `short:"l" long:"log" description:"path to file for logging (supply '-' for syslog)"`
+	Log       string `short:"l" long:"log" description:"path to file for logging"`
 	ShowHelp  bool   `long:"help" description:"show this help message"`
 }
-
-var log *logmod.Logger
 
 /// Github types
 
@@ -171,24 +168,15 @@ func main() {
 }
 
 func configureLogging(dst string) {
-	switch dst {
-	case "":
-		log = logmod.New(os.Stdout, "", logmod.LstdFlags)
-	case "-": // syslog
-		var err error
-		log, err = syslog.NewLogger(syslog.LOG_NOTICE|syslog.LOG_LOCAL4,
-			logmod.LstdFlags)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error: cannot connect to syslog!")
-			os.Exit(1)
-		}
-	default:
-		handler, err := os.OpenFile(opts.Log,
-			os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "Error: cannot open log file!")
-			os.Exit(1)
-		}
-		log = logmod.New(handler, "", logmod.LstdFlags)
+	if dst == "" || dst == "-" {
+		return
 	}
+
+	file, err := os.OpenFile(opts.Log,
+		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: cannot open log file!")
+		os.Exit(1)
+	}
+	log.SetOutput(file)
 }
