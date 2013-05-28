@@ -24,6 +24,7 @@ var opts struct {
 	Port      string `short:"p" long:"port" default:"8000" description:"port to listen on"`
 	Log       string `short:"l" long:"log" description:"path to file for logging"`
 	Config    string `short:"c" long:"config" description:"read rules from this file"`
+	Dump      bool   `short:"d" long:"dump" description:"dump configuration to console"`
 	ShowHelp  bool   `long:"help" description:"show this help message"`
 }
 
@@ -170,6 +171,15 @@ func main() {
 		errhandle(err, "")
 		bits := strings.Split(strings.TrimSpace(string(data)), "\n")
 		errhandle(cfg.Parse(bits), "")
+	}
+
+	if opts.Dump {
+		for repo, rules := range cfg {
+			for _, rule := range rules {
+				fmt.Printf("%s:%s='%s'\n", repo, rule.Branch, rule.Command)
+			}
+		}
+		return
 	}
 
 	http.HandleFunc("/", cfg.HandleRequest)
