@@ -70,7 +70,7 @@ type Config map[string]Rules
 /// Config
 
 func (c Config) Parse(input []string) error {
-	RuleRe := regexp.MustCompile("(.+/.+):(.+)=(.+)")
+	RuleRe := regexp.MustCompile("([^:/]+/[^:/]+?):([^=]+?)=(.+)")
 
 	for _, line := range input {
 		bits := RuleRe.FindStringSubmatch(line)
@@ -101,6 +101,7 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 		data.Repository.Owner.Name, data.Repository.Name)
 	rules, ok := c[name]
 	if !ok {
+		log.Printf("No handlers for %s", name)
 		return
 	}
 
@@ -114,7 +115,7 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if executed == 0 {
-		log.Printf("No handlers for %s", name)
+		log.Printf("No handlers for %s:%s", name, branch)
 	}
 }
 
@@ -188,6 +189,7 @@ func main() {
 
 func configureLogging(dst string) {
 	if dst == "" || dst == "-" {
+		log.SetOutput(os.Stdout)
 		return
 	}
 
