@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"io/ioutil"
 )
 
 /// Globals
@@ -22,6 +23,7 @@ var opts struct {
 	Interface string `short:"i" long:"interface" default:"" description:"ip to listen on"`
 	Port      string `short:"p" long:"port" default:"8000" description:"port to listen on"`
 	Log       string `short:"l" long:"log" description:"path to file for logging"`
+	Config    string `short:"c" long:"config" description:"read rules from this file"`
 	ShowHelp  bool   `long:"help" description:"show this help message"`
 }
 
@@ -147,7 +149,7 @@ func main() {
 
 	argparser.Usage = `[OPTIONS] user/repo:branch=command [more rules...]`
 
-	if opts.ShowHelp || len(args) == 0 {
+	if opts.ShowHelp || (len(args) == 0 && opts.Config == "") {
 		argparser.WriteHelp(os.Stdout)
 		return
 	}
@@ -155,12 +157,14 @@ func main() {
 	configureLogging(opts.Log)
 
 	cfg := make(Config)
-	err = cfg.Parse(args)
-	if err != nil {
-		log.Println(err)
-		// maybe it's better to print this error on stdout always
-		//fmt.Println(err)
-		os.Exit(1)
+	if len(args) > 0 {
+		errhandle(cfg.Parse(args), "")
+	}
+	if opts.Config != "" {
+		data, err := ioutil.ReadFile(opts.Config)
+		errhandle(err, "")
+		bits := strings.Split(strings.TrimSpace(string(data)), "\n")
+		errhandle(cfg.Parse(bits), "")
 	}
 
 	http.HandleFunc("/", cfg.HandleRequest)
@@ -174,9 +178,17 @@ func configureLogging(dst string) {
 
 	file, err := os.OpenFile(opts.Log,
 		os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "Error: cannot open log file!")
-		os.Exit(1)
-	}
+	errhandle(err, "Error: cannot open log file!")
 	log.SetOutput(file)
+}
+
+func errhandle(err error, msg string) {
+	if err == nil {
+		return
+	}
+	if msg == "" {
+		msg = err.Error()
+	}
+	fmt.Fprintln(os.Stderr, msg)
+	os.Exit(1)
 }
