@@ -111,7 +111,7 @@ func (c *Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func run(command string, repo string, data *GithubPayload) error {
-	cmd := exec.Command(command)
+	cmd := exec.Command("sh", "-c", command)
 
 	commit := data.Commits[0]
 	cmd.Env = []string{
