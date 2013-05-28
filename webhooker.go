@@ -105,10 +105,15 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 
 	branch := strings.TrimPrefix(data.Ref, "refs/heads/")
 
+	executed := 0
 	for _, rule := range rules {
 		if rule.Branch == branch {
 			run(rule.Command, name, &data)
+			executed += 1
 		}
+	}
+	if executed == 0 {
+		log.Printf("No handlers for %s", name)
 	}
 }
 
