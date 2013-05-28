@@ -24,7 +24,7 @@ var opts struct {
 	Port      string `short:"p" long:"port" default:"8000" description:"port to listen on"`
 	Log       string `short:"l" long:"log" description:"path to file for logging"`
 	Config    string `short:"c" long:"config" description:"read rules from this file"`
-	Dump      bool   `short:"d" long:"dump" description:"dump configuration to console"`
+	Dump      bool   `short:"d" long:"dump" description:"dump rules to console"`
 	ShowHelp  bool   `long:"help" description:"show this help message"`
 }
 
@@ -154,7 +154,21 @@ func main() {
 		return
 	}
 
-	argparser.Usage = `[OPTIONS] user/repo:branch=command [more rules...]`
+	argparser.Usage = `[OPTIONS] user/repo:branch=command [more rules...]
+
+Runs specified shell commands on incoming webhook from Github. Shell command
+environment contains:
+
+  $REPO - repository name in "user/name" format
+  $REPO_URL - full repository url
+  $PRIVATE - strings "true" or "false" if repository is private or not
+  $BRANCH - branch name
+  $COMMIT - last commit hash id
+  $COMMIT_MESSAGE - last commit message
+  $COMMIT_TIME - last commit timestamp
+  $COMMIT_AUTHOR - username of author of last commit
+  $COMMIT_URL - full url to commit
+`
 
 	if opts.ShowHelp || (len(args) == 0 && opts.Config == "") {
 		argparser.WriteHelp(os.Stdout)
