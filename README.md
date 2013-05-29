@@ -24,7 +24,7 @@ nginx and such config is used to protect it from unwanted requests:
 
 ```
     location /webhook {
-        proxy_pass http://localhost:5010;
+        proxy_pass http://localhost:3456;
         allow 204.232.175.64/27;
         allow 192.30.252.0/22;
         deny all;
