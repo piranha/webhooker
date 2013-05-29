@@ -12,7 +12,8 @@ Install it with `go get github.com/piranha/webhooker` or use 64 bit binary:
 
 ## Usage
 
-You run it like this (run webhooker without arguments to get help):
+You run it like this (run webhooker without arguments to get help - you could
+also put all rules in a separate config file):
 
 ```
 ./webhooker -p 3456 -i 127.0.0.1 piranha/webhooker:master='echo $COMMIT'
