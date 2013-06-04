@@ -19,6 +19,11 @@ also put all rules in a separate config file):
 ./webhooker -p 3456 -i 127.0.0.1 piranha/webhooker:master='echo $COMMIT'
 ```
 
+It runs every command in `sh`, so you can use more complex commands (with `&&`
+and `|`).
+
+## Running
+
 I expect you to run it behind your HTTP proxy of choice, and in my case it's
 nginx and such config is used to protect it from unwanted requests:
 
@@ -47,3 +52,6 @@ webhooker provides your commands with some variables in case you need them:
 - `$COMMIT_TIME` - last commit timestamp
 - `$COMMIT_AUTHOR` - username of author of last commit
 - `$COMMIT_URL` - full url to commit
+
+And, of course, it passes through some common variables: `$PATH`, `$HOME`,
+`$USER`.

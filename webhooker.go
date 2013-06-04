@@ -124,6 +124,10 @@ func run(command string, repo string, data *GithubPayload) error {
 
 	commit := data.Commits[0]
 	cmd.Env = []string{
+		env("PATH", os.Getenv("PATH")),
+		env("HOME", os.Getenv("HOME")),
+		env("USER", os.Getenv("USER")),
+
 		env("REPO", repo),
 		env("REPO_URL", data.Repository.Url),
 		env("PRIVATE", fmt.Sprintf("%t", data.Repository.Private)),
