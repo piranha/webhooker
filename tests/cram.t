@@ -1,12 +1,12 @@
+#!/usr/bin/env cram
+
 webhooker tests init:
 
   $ go build webhooker || go build github.com/piranha/webhooker
   $ post() {
   > curl -s --data-urlencode payload@$1 http://localhost:1234/
   > }
-  $ ./webhooker -p 1234 \
-  > octokitty/testing:master="echo otm" \
-  > &
+  $ ./webhooker -p 1234 octokitty/testing:master='echo $REPO' &
 
 Usage:
 
@@ -17,6 +17,10 @@ Usage:
   Runs specified shell commands on incoming webhook from Github. Shell command
   environment contains:
   
+    $PATH - proxied from parent environment
+    $HOME - proxied from parent environment
+    $USER - proxied from parent environment
+  
     $REPO - repository name in "user/name" format
     $REPO_URL - full repository url
     $PRIVATE - strings "true" or "false" if repository is private or not
@@ -26,6 +30,12 @@ Usage:
     $COMMIT_TIME - last commit timestamp
     $COMMIT_AUTHOR - username of author of last commit
     $COMMIT_URL - full url to commit
+  
+  'user/repo:branch' pattern is a regular expression, so you could do
+  'user/project:fix.*=cmd' or even '.*=cmd'.
+  
+  Also never forget to properly escape your rule, if you pass it through command
+  line: usually enclosing it in single quotes (') is enough.
   
   
   Application Options:
@@ -39,7 +49,7 @@ Usage:
 Check that it works:
 
   $ post $TESTDIR/example.json
-  [\d/: ]+ 'echo otm' for octokitty/testing output: otm (re)
+  [\d/: ]+ 'echo \$REPO' for octokitty/testing output: octokitty/testing (re)
 
 Cool down:
 

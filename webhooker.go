@@ -191,6 +191,10 @@ func main() {
 Runs specified shell commands on incoming webhook from Github. Shell command
 environment contains:
 
+  $PATH - proxied from parent environment
+  $HOME - proxied from parent environment
+  $USER - proxied from parent environment
+
   $REPO - repository name in "user/name" format
   $REPO_URL - full repository url
   $PRIVATE - strings "true" or "false" if repository is private or not
@@ -200,6 +204,12 @@ environment contains:
   $COMMIT_TIME - last commit timestamp
   $COMMIT_AUTHOR - username of author of last commit
   $COMMIT_URL - full url to commit
+
+'user/repo:branch' pattern is a regular expression, so you could do
+'user/project:fix.*=cmd' or even '.*=cmd'.
+
+Also never forget to properly escape your rule, if you pass it through command
+line: usually enclosing it in single quotes (') is enough.
 `
 
 	if opts.ShowHelp || (len(args) == 0 && opts.Config == "") {

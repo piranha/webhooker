@@ -19,3 +19,4 @@ endif
 
 test:
 	go test
+	cram tests/cram.t
