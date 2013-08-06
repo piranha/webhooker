@@ -55,3 +55,20 @@ webhooker provides your commands with some variables in case you need them:
 
 And, of course, it passes through some common variables: `$PATH`, `$HOME`,
 `$USER`.
+
+## Example
+
+I render my own sites using `webhooker`. I've just put it in
+[supervisord](http://supervisord.org/) like that:
+
+```
+[program:webhooker]
+command = /home/piranha/bin/webhooker -p 5010 -i 127.0.0.1
+    piranha/solovyov.net:master='cd ~/web/solovyov.net && GOSTATIC=~/bin/gostatic make update'
+    piranha/osgameclones:master='cd ~/web/osgameclones && CYRAX=/usr/local/bin/cyrax make update'
+user = piranha
+environment=HOME="/home/piranha"
+```
+
+You can see that it updates and renders sites on push to them (`make update`
+there runs `git pull` and renders site).
