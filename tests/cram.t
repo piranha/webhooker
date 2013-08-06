@@ -2,7 +2,7 @@
 
 webhooker tests init:
 
-  $ go build webhooker || go build github.com/piranha/webhooker
+  $ go build github.com/piranha/webhooker
   $ post() {
   > curl -s --data-urlencode payload@$1 http://localhost:1234/
   > }
