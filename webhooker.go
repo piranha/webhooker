@@ -28,6 +28,26 @@ var opts struct {
 	ShowHelp  bool   `long:"help" description:"show this help message"`
 }
 
+/// Core interfaces
+
+type Payload interface {
+	RepoName() string
+	BranchName() string
+	EnvData() []string
+}
+
+func GetPath(p Payload) string {
+	return p.RepoName() + ":" + p.BranchName()
+}
+
+type Rule interface {
+	Match(path string) bool
+	Run(data Payload) error
+	String() string
+}
+
+type Config []Rule
+
 /// Github types
 
 type GithubUser struct {
@@ -56,96 +76,104 @@ type GithubPayload struct {
 	Commits    []GithubCommit
 }
 
-/// Config types
-
-type Rule struct {
-	Branch  string
-	Command string
+func (g *GithubPayload) RepoName() string {
+	return g.Repository.Owner.Name+"/"+g.Repository.Name
 }
 
-type Rules []Rule
-
-type Config map[string]Rules
-
-/// Config
-
-func (c Config) Parse(input []string) error {
-	RuleRe := regexp.MustCompile("([^:/]+/[^:/]+?):([^=]+?)=(.+)")
-
-	for _, line := range input {
-		bits := RuleRe.FindStringSubmatch(line)
-		if len(bits) != 4 {
-			return fmt.Errorf("Can't parse line '%s'", line)
-		}
-
-		name := bits[1]
-		if _, ok := c[name]; !ok {
-			c[name] = make(Rules, 0)
-		}
-		c[name] = append(c[name], Rule{bits[2], bits[3]})
-	}
-
-	return nil
+func (g *GithubPayload) BranchName() string {
+	return strings.TrimPrefix(g.Ref, "refs/heads/")
 }
 
-func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
-	var data GithubPayload
-	err := json.Unmarshal([]byte(r.FormValue("payload")), &data)
-	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+func (g *GithubPayload) EnvData() []string {
+	commit := g.Commits[0]
 
-	name := fmt.Sprintf("%s/%s",
-		data.Repository.Owner.Name, data.Repository.Name)
-	rules, ok := c[name]
-	if !ok {
-		log.Printf("No handlers for %s", name)
-		return
-	}
-
-	branch := strings.TrimPrefix(data.Ref, "refs/heads/")
-
-	executed := 0
-	for _, rule := range rules {
-		if rule.Branch == branch {
-			run(rule.Command, name, &data)
-			executed += 1
-		}
-	}
-	if executed == 0 {
-		log.Printf("No handlers for %s:%s", name, branch)
-	}
-}
-
-func run(command string, repo string, data *GithubPayload) error {
-	cmd := exec.Command("sh", "-c", command)
-
-	commit := data.Commits[0]
-	cmd.Env = []string{
-		env("PATH", os.Getenv("PATH")),
-		env("HOME", os.Getenv("HOME")),
-		env("USER", os.Getenv("USER")),
-
-		env("REPO", repo),
-		env("REPO_URL", data.Repository.Url),
-		env("PRIVATE", fmt.Sprintf("%t", data.Repository.Private)),
-		env("BRANCH", data.Ref),
+	return []string{
+		env("REPO", g.RepoName()),
+		env("REPO_URL", g.Repository.Url),
+		env("PRIVATE", fmt.Sprintf("%t", g.Repository.Private)),
+		env("BRANCH", g.Ref),
 		env("COMMIT", commit.Id),
 		env("COMMIT_MESSAGE", commit.Message),
 		env("COMMIT_TIME", commit.Timestamp),
 		env("COMMIT_AUTHOR", commit.Author.Name),
 		env("COMMIT_URL", commit.Url),
 	}
+}
+
+/// Rule implementation
+
+type PatRule struct {
+	Pattern string
+	Command string
+	Re      *regexp.Regexp
+}
+
+func (r *PatRule) Match(path string) bool {
+	return r.Re.MatchString(path)
+}
+
+func (r *PatRule) String() string {
+	return fmt.Sprintf("%s='%s'", r.Pattern, r.Command)
+}
+
+func (r *PatRule) Run(data Payload) error {
+	cmd := exec.Command("sh", "-c", r.Command)
+
+	cmd.Env = append(data.EnvData(),
+		env("PATH", os.Getenv("PATH")),
+		env("HOME", os.Getenv("HOME")),
+		env("USER", os.Getenv("USER")),
+		)
 
 	out, err := cmd.CombinedOutput()
-	log.Printf("'%s' for %s output: %s", command, repo, out)
+	log.Printf("'%s' for %s output: %s", r.Command, data.RepoName(), out)
 	return err
 }
 
-func env(key string, value string) string {
-	return fmt.Sprintf("%s=%s", key, value)
+/// actual work
+
+func (c *Config) ParsePatterns(input []string) error {
+	for _, line := range input {
+		bits := strings.SplitN(line, "=", 2)
+		if len(bits) != 2 {
+			return fmt.Errorf("Can't parse line '%s'", line)
+		}
+
+		re, err := regexp.Compile(bits[0])
+		if err != nil {
+			return fmt.Errorf("Line '%s' is not a valid regular expression",
+				line)
+		}
+
+		*c = append(*c, &PatRule{bits[0], bits[1], re})
+	}
+
+	return nil
+}
+
+func (c Config) ExecutePayload(data Payload) error {
+	path := GetPath(data)
+
+	for _, rule := range c {
+		if rule.Match(path) {
+			return rule.Run(data)
+		}
+	}
+
+	log.Printf("No handlers for %s", path)
+	return nil
+}
+
+func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
+	data := new(GithubPayload)
+	err := json.Unmarshal([]byte(r.PostFormValue("payload")), data)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	c.ExecutePayload(data)
 }
 
 /// Main
@@ -181,22 +209,20 @@ environment contains:
 
 	configureLogging(opts.Log)
 
-	cfg := make(Config)
+	cfg := Config{}
 	if len(args) > 0 {
-		errhandle(cfg.Parse(args), "")
+		errhandle(cfg.ParsePatterns(args), "")
 	}
 	if opts.Config != "" {
 		data, err := ioutil.ReadFile(opts.Config)
 		errhandle(err, "")
 		bits := strings.Split(strings.TrimSpace(string(data)), "\n")
-		errhandle(cfg.Parse(bits), "")
+		errhandle(cfg.ParsePatterns(bits), "")
 	}
 
 	if opts.Dump {
-		for repo, rules := range cfg {
-			for _, rule := range rules {
-				fmt.Printf("%s:%s='%s'\n", repo, rule.Branch, rule.Command)
-			}
+		for _, rule := range cfg {
+			fmt.Println(rule)
 		}
 		return
 	}
@@ -204,6 +230,8 @@ environment contains:
 	http.HandleFunc("/", cfg.HandleRequest)
 	http.ListenAndServe(opts.Interface+":"+opts.Port, nil)
 }
+
+/// Utils
 
 func configureLogging(dst string) {
 	if dst == "" || dst == "-" {
@@ -226,4 +254,8 @@ func errhandle(err error, msg string) {
 	}
 	fmt.Fprintln(os.Stderr, msg)
 	os.Exit(1)
+}
+
+func env(key string, value string) string {
+	return fmt.Sprintf("%s=%s", key, value)
 }

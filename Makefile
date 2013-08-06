@@ -16,3 +16,6 @@ ifndef UPLOAD_PATH
 else
 	rsync -l -P $(ALL) $(UPLOAD_PATH)
 endif
+
+test:
+	go test
