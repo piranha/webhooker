@@ -2,13 +2,19 @@
 
 An application to run shell commands on incoming WebHooks from Github.
 
+[![Build Status](https://travis-ci.org/piranha/webhooker.png)](https://travis-ci.org/piranha/webhooker)
+
 ## Installation
 
-Install it with `go get github.com/piranha/webhooker` or use 64 bit binary:
+Install it with `go get github.com/piranha/webhooker` or download a binary:
 
- - [Linux](http://solovyov.net/files/webhooker-linux)
- - [OS X](http://solovyov.net/files/webhooker-osx)
- - [Windows](http://solovyov.net/files/webhooker-win.exe)
+| Linux         | OS X          | Windows       |
+|:--------------|:--------------|:--------------|
+| [64 bit][l64] | [64 bit][x64] | [64 bit][w64] |
+
+[l64]: http://solovyov.net/files/webhooker-linux
+[x64]: http://solovyov.net/files/webhooker-osx
+[w64]: http://solovyov.net/files/webhooker-win.exe
 
 ## Usage
 

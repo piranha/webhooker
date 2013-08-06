@@ -6,7 +6,10 @@ webhooker tests init:
   $ post() {
   > curl -s --data-urlencode payload@$1 http://localhost:1234/
   > }
-  $ ./webhooker -p 1234 octokitty/testing:master='echo $REPO' &
+  $ ./webhooker -p 1234 \
+  > 'octokitty/testing:master=echo OTM' \
+  > '.*=echo $REPO' \
+  > &
 
 Usage:
 
@@ -49,7 +52,9 @@ Usage:
 Check that it works:
 
   $ post $TESTDIR/example.json
-  [\d/: ]+ 'echo \$REPO' for octokitty/testing output: octokitty/testing (re)
+  [\d/: ]+ 'echo OTM' for octokitty/testing output: OTM (re)
+  $ post $TESTDIR/other.json
+  [\d/: ]+ 'echo \$REPO' for hellothere/other output: hellothere/other (re)
 
 Cool down:
 

@@ -1,0 +1,14 @@
+{
+    "ref":"refs/heads/lolster",
+    "repository": {
+        "name":"other",
+        "owner":{
+            "name":"hellothere"
+        }
+    },
+    "commits":[
+        {
+            "author":{}
+        }
+    ]
+}
