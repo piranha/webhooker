@@ -28,6 +28,9 @@ also put all rules in a separate config file):
 It runs every command in `sh`, so you can use more complex commands (with `&&`
 and `|`).
 
+`user/repo:branch` pattern is a regular expression, so you could do
+`user/project:fix.*=cmd` or even `.*=cmd`.
+
 ## Running
 
 I expect you to run it behind your HTTP proxy of choice, and in my case it's
