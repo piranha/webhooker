@@ -47,6 +47,7 @@ Usage:
     -l, --log=       path to file for logging
     -c, --config=    read rules from this file
     -d, --dump       dump rules to console
+    -V, --version    show version and exit
         --help       show this help message
 
 Check that it works:

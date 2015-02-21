@@ -17,15 +17,16 @@ import (
 
 /// Globals
 
-var Version = "0.1"
+var Version = "0.2"
 
 var opts struct {
-	Interface string `short:"i" long:"interface" default:"" description:"ip to listen on"`
-	Port      string `short:"p" long:"port" default:"8000" description:"port to listen on"`
-	Log       string `short:"l" long:"log" description:"path to file for logging"`
-	Config    string `short:"c" long:"config" description:"read rules from this file"`
-	Dump      bool   `short:"d" long:"dump" description:"dump rules to console"`
-	ShowHelp  bool   `long:"help" description:"show this help message"`
+	Interface string `short:"i" long:"interface" default:""     description:"ip to listen on"`
+	Port      string `short:"p" long:"port"      default:"8000" description:"port to listen on"`
+	Log       string `short:"l" long:"log"                      description:"path to file for logging"`
+	Config    string `short:"c" long:"config"                   description:"read rules from this file"`
+	Dump      bool   `short:"d" long:"dump"                     description:"dump rules to console"`
+	Version   bool   `short:"V" long:"version"                  description:"show version and exit"`
+	ShowHelp  bool   `          long:"help"                     description:"show this help message"`
 }
 
 /// Core interfaces
