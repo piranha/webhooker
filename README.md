@@ -6,15 +6,8 @@ An application to run shell commands on incoming WebHooks from Github.
 
 ## Installation
 
-Install it with `go get github.com/piranha/webhooker` or download a binary:
-
-| Linux         | OS X          | Windows       |
-|:--------------|:--------------|:--------------|
-| [64 bit][l64] | [64 bit][x64] | [64 bit][w64] |
-
-[l64]: http://solovyov.net/files/webhooker-linux
-[x64]: http://solovyov.net/files/webhooker-osx
-[w64]: http://solovyov.net/files/webhooker-win.exe
+Install it with `go get github.com/piranha/webhooker` or download a binary from
+[releases page](https://github.com/piranha/webhooker/releases).
 
 ## Usage
 
