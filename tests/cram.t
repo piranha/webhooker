@@ -43,7 +43,7 @@ Usage:
   
   Application Options:
     -i, --interface= ip to listen on
-    -p, --port=      port to listen on (8000)
+    -p, --port=      port to listen on (default: 8000)
     -l, --log=       path to file for logging
     -c, --config=    read rules from this file
     -d, --dump       dump rules to console
