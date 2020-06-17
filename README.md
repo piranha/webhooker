@@ -38,7 +38,17 @@ nginx and such config is used to protect it from unwanted requests:
     }
 ```
 
-After that I can put `http://domain.my/webhook/` in Github's repo settings
+Or in caddy:
+
+```
+  @webhook {
+    remote_ip 192.30.252.0/22 185.199.108.0/22 140.82.112.0/20
+    path /webhook
+  }
+  reverse_proxy @webhook localhost:3456
+```
+
+After that I can put `http://domain.my/webhook` in Github's repo settings
 WebHook URLs and press 'Test Hook' to check if it works.
 
 ## Environment
@@ -60,17 +70,25 @@ And, of course, it passes through some common variables: `$PATH`, `$HOME`,
 
 ## Example
 
-I render my own sites using `webhooker`. I've just put it in
-[supervisord](http://supervisord.org/) like that:
+I render my own sites using `webhooker`. Using systemd you can put that in `/etc/systemd/system/webhooker.service`:
 
 ```
-[program:webhooker]
-command = /home/piranha/bin/webhooker -p 5010 -i 127.0.0.1
-    piranha/solovyov.net:master='cd ~/web/solovyov.net && GOSTATIC=~/bin/gostatic make update'
-    piranha/osgameclones:master='cd ~/web/osgameclones && CYRAX=/usr/local/bin/cyrax make update'
-user = piranha
-environment=HOME="/home/piranha"
+[Unit]
+Description=webhooker
+
+[Service]
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=webhooker
+User=piranha
+Group=piranha
+Environment="CACHE_DIR=/home/piranha/bin"
+ExecStart=/usr/local/bin/webhooker -p 3456 -i 127.0.0.1 \
+	piranha/solovyov.net:master='cd /opt/solovyov.net && git pull -q && make'
+
+[Install]
+WantedBy=default.target
 ```
 
-You can see that it updates and renders sites on push to them (`make update`
-there runs `git pull` and renders site).
+You can see that it updates and renders site on push. Run `systemctl
+daemon-reload && systemctl start webhooker` to run this stuff.
