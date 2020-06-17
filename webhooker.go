@@ -1,4 +1,4 @@
-// (c) 2013 Alexander Solovyov under terms of ISC License
+// (c) 2013-2020 Alexander Solovyov under terms of ISC License
 
 package main
 
@@ -17,7 +17,7 @@ import (
 
 /// Globals
 
-var Version = "0.2"
+var Version = "0.3"
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
@@ -166,8 +166,16 @@ func (c Config) ExecutePayload(data Payload) error {
 }
 
 func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
+	ctype := r.Header.Get("Content-type")
+
 	data := new(GithubPayload)
-	err := json.Unmarshal([]byte(r.PostFormValue("payload")), data)
+	var err error
+	if ctype == "application/json" {
+		decoder := json.NewDecoder(r.Body)
+		err = decoder.Decode(&data)
+	} else {
+		err = json.Unmarshal([]byte(r.PostFormValue("payload")), data)
+	}
 	if err != nil {
 		log.Println(err)
 		w.WriteHeader(http.StatusInternalServerError)
