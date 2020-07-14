@@ -21,9 +21,9 @@ func (r *MockedRule) String() string {
 	return r.Pattern
 }
 
-func (r *MockedRule) Run(data Payload) error {
+func (r *MockedRule) Run(data Payload) (string, error) {
 	args := r.Mock.Called(data)
-	return args.Error(0)
+	return "", args.Error(0)
 }
 
 func TestRunIsCalled(t *testing.T) {
@@ -47,7 +47,7 @@ func TestRunIsCalled(t *testing.T) {
 	right.On("Run", data).Return(nil)
 
 	c := &Config{wrong, right}
-	err := c.ExecutePayload(data)
+	_, err := c.ExecutePayload(data)
 	if err != nil {
 		t.Error("ExecutePayload should not return an error")
 	}
