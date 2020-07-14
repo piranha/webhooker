@@ -20,10 +20,11 @@ build/webhooker-%: $(SOURCE)
 	@mkdir -p $(@D)
 	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 go build -o $@
 
-release: $(ALL)
 ifndef desc
-	@echo "Run it as 'make release desc=tralala'"
+release:
+	@echo "Push a tag and run this as 'make release desc=tralala'"
 else
+release: $(ALL)
 	github-release release -u piranha -r webhooker -t "$(TAG)" -n "$(TAG)" --description "$(desc)"
 	@for x in $(ALL); do \
 		echo "Uploading $$x" && \

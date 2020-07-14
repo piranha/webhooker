@@ -6,18 +6,19 @@ import (
 	"encoding/json"
 	"fmt"
 	flags "github.com/jessevdk/go-flags"
+	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"regexp"
 	"strings"
-	"io/ioutil"
 )
 
 /// Globals
 
-var Version = "0.3"
+var Version = "0.4"
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
@@ -43,7 +44,7 @@ func GetPath(p Payload) string {
 
 type Rule interface {
 	Match(path string) bool
-	Run(data Payload) error
+	Run(data Payload) (string, error)
 	String() string
 }
 
@@ -117,7 +118,7 @@ func (r *PatRule) String() string {
 	return fmt.Sprintf("%s='%s'", r.Pattern, r.Command)
 }
 
-func (r *PatRule) Run(data Payload) error {
+func (r *PatRule) Run(data Payload) (string, error) {
 	cmd := exec.Command("sh", "-c", r.Command)
 
 	cmd.Env = append(data.EnvData(),
@@ -128,7 +129,7 @@ func (r *PatRule) Run(data Payload) error {
 
 	out, err := cmd.CombinedOutput()
 	log.Printf("'%s' for %s output: %s", r.Command, data.RepoName(), out)
-	return err
+	return fmt.Sprintf("'%s' for %s output:\n%s", r.Command, data.RepoName(), out), err
 }
 
 /// actual work
@@ -152,7 +153,7 @@ func (c *Config) ParsePatterns(input []string) error {
 	return nil
 }
 
-func (c Config) ExecutePayload(data Payload) error {
+func (c Config) ExecutePayload(data Payload) (string, error) {
 	path := GetPath(data)
 
 	for _, rule := range c {
@@ -161,8 +162,9 @@ func (c Config) ExecutePayload(data Payload) error {
 		}
 	}
 
-	log.Printf("No handlers for %s", path)
-	return nil
+	msg := fmt.Sprintf("No handlers for %s", path)
+	log.Print(msg)
+	return msg, nil
 }
 
 func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
@@ -178,11 +180,26 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), 500)
 		return
 	}
 
-	c.ExecutePayload(data)
+	out, err := c.ExecutePayload(data)
+	if err != nil {
+		log.Println(err)
+		if out == "" {
+			http.Error(w, err.Error(), 500)
+		} else {
+			http.Error(w, out, 500)
+		}
+		return
+	}
+
+	_, err = io.WriteString(w, out)
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 /// Main
