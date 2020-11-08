@@ -8,7 +8,7 @@ import (
 	flags "github.com/jessevdk/go-flags"
 	"io"
 	"io/ioutil"
-	"log"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"os"
 	"os/exec"
@@ -18,7 +18,7 @@ import (
 
 /// Globals
 
-var Version = "0.4"
+var Version = "0.4.1"
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
@@ -143,8 +143,7 @@ func (c *Config) ParsePatterns(input []string) error {
 
 		re, err := regexp.Compile(bits[0])
 		if err != nil {
-			return fmt.Errorf("Line '%s' is not a valid regular expression",
-				line)
+			return fmt.Errorf("Line '%s' is not a valid regular expression", line)
 		}
 
 		*c = append(*c, &PatRule{bits[0], bits[1], re})
@@ -177,10 +176,13 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 		err = decoder.Decode(&data)
 	} else {
 		err = json.Unmarshal([]byte(r.PostFormValue("payload")), data)
+		if err != nil {
+			log.Errorf("FAILED to unmarshal JSON payload from Github. %s", err.Error())
+		}
 	}
 	if err != nil {
-		log.Println(err)
-		http.Error(w, err.Error(), 500)
+		log.Errorf("Internal Server Error: %s", err.Error())
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -188,16 +190,18 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Println(err)
 		if out == "" {
-			http.Error(w, err.Error(), 500)
+			log.Errorf("Internal Server Error: %s", err.Error())
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 		} else {
-			http.Error(w, out, 500)
+			log.Errorf("Internal Server Error: %s", err.Error())
+			http.Error(w, out, http.StatusInternalServerError)
 		}
 		return
 	}
 
 	_, err = io.WriteString(w, out)
 	if err != nil {
-		log.Println(err)
+		log.Errorf("FAILED to write HTTP response: %s", err.Error())
 		return
 	}
 }
@@ -264,7 +268,10 @@ line: usually enclosing it in single quotes (') is enough.
 	}
 
 	http.HandleFunc("/", cfg.HandleRequest)
-	http.ListenAndServe(opts.Interface+":"+opts.Port, nil)
+	listenErr := http.ListenAndServe(fmt.Sprintf("%s:%s",opts.Interface,opts.Port), nil)
+	if listenErr != nil {
+		log.Printf("Unable to listen on %s:%s. Details: %s", opts.Interface, opts.Port, listenErr.Error())
+	}
 }
 
 /// Utils
@@ -288,7 +295,8 @@ func errhandle(err error, msg string) {
 	if msg == "" {
 		msg = err.Error()
 	}
-	fmt.Fprintln(os.Stderr, msg)
+	bytesWritten, bytesWrittenErr := fmt.Fprintln(os.Stderr, msg)
+
 	os.Exit(1)
 }
 
