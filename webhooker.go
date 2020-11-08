@@ -12,13 +12,18 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"os/signal"
 	"regexp"
 	"strings"
+	"syscall"
 )
 
 /// Globals
 
-var Version = "0.4.1"
+var (
+	Version = "0.4.1"
+	AppName = "WebHooker"
+)
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
@@ -93,7 +98,7 @@ func (g *GithubPayload) EnvData() []string {
 		env("REPO", g.RepoName()),
 		env("REPO_URL", g.Repository.Url),
 		env("PRIVATE", fmt.Sprintf("%t", g.Repository.Private)),
-		env("BRANCH", g.Ref),
+		env("BRANCH", g.BranchName()),
 		env("COMMIT", commit.Id),
 		env("COMMIT_MESSAGE", commit.Message),
 		env("COMMIT_TIME", commit.Timestamp),
@@ -206,9 +211,15 @@ func (c Config) HandleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (c Config) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	c.HandleRequest(w,r)
+}
 /// Main
 
 func main() {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGINT)
+
 	argparser := flags.NewParser(&opts, flags.PrintErrors|flags.PassDoubleDash)
 
 	args, err := argparser.Parse()
@@ -268,10 +279,21 @@ line: usually enclosing it in single quotes (') is enough.
 	}
 
 	http.HandleFunc("/", cfg.HandleRequest)
-	listenErr := http.ListenAndServe(fmt.Sprintf("%s:%s",opts.Interface,opts.Port), nil)
-	if listenErr != nil {
-		log.Printf("Unable to listen on %s:%s. Details: %s", opts.Interface, opts.Port, listenErr.Error())
+
+	httpErr := make(chan error, 1)
+	go func() {
+		log.Info(fmt.Sprintf("Starting server on %s:%s..", opts.Interface, opts.Port))
+		httpErr <- http.ListenAndServe(fmt.Sprintf("%s:%s", opts.Interface, opts.Port), cfg)
+	}()
+
+	select {
+	case err := <-httpErr:
+		log.Error(err.Error())
+	case <-stop:
+		log.Info("Stopped via signal")
 	}
+
+	log.Info(fmt.Sprintf("Stopping %s..", AppName))
 }
 
 /// Utils
@@ -296,7 +318,10 @@ func errhandle(err error, msg string) {
 		msg = err.Error()
 	}
 	bytesWritten, bytesWrittenErr := fmt.Fprintln(os.Stderr, msg)
-
+	log.Infof("Wrote %d bytes to os.Stderr", bytesWritten)
+	if bytesWrittenErr != nil {
+		log.Errorf("Error writing error message to os.Stderr. %s", bytesWrittenErr.Error())
+	}
 	os.Exit(1)
 }
 
