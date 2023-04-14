@@ -77,12 +77,12 @@ Check that errors are correctly processed:
   No handlers for 'piranha/unknown:'
   $ POST $TESTDIR/cmderror.json
   'does-not-exist' for 'invalid/command:' output:
-  sh: does-not-exist: command not found
+  (sh: does-not-exist: command not found|sh: 1: does-not-exist: not found) (re)
   
   $ LOGS
   [\d/: ]+ unexpected end of JSON input (re)
   [\d/: ]+ No handlers for 'piranha/unknown:' (re)
-  [\d/: ]+ 'does-not-exist' for 'invalid/command:' output: sh: (1:)? does-not-exist: command not found (re)
+  [\d/: ]+ 'does-not-exist' for 'invalid/command:' output: (sh: does-not-exist: command not found|sh: 1: does-not-exist: not found) (re)
   [\d/: ]+ exit status 127 (re)
  
 
