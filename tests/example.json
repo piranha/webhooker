@@ -115,27 +115,11 @@
       "email":"lolwut@noway.biz",
       "name":"Garen Torikian"
    },
-   "ref":"refs/heads/master",
+   "ref":"refs/heads/main",
    "repository":{
-      "created_at":1332977768,
-      "description":"",
-      "fork":false,
-      "forks":0,
-      "has_downloads":true,
-      "has_issues":true,
-      "has_wiki":true,
-      "homepage":"",
-      "id":3860742,
-      "language":"Ruby",
-      "master_branch":"master",
       "name":"testing",
       "full_name": "octokitty/testing",
-      "open_issues":2,
       "private":false,
-      "pushed_at":1363295520,
-      "size":2156,
-      "stargazers":1,
-      "url":"https://github.com/octokitty/testing",
-      "watchers":1
+      "url":"https://github.com/octokitty/testing"
    }
 }

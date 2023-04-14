@@ -7,9 +7,14 @@ webhooker tests init:
   $ POST() {
   >   curl -s --data-urlencode payload@$1 http://localhost:1234/
   > }
+  $ LINES=0
+  $ LOGS() {
+  > awk "NR > $LINES" logs
+  > LINES=$(cat logs | wc -l)
+  > }
   $ ./webhooker -p 1234 \
-  > 'octokitty/testing:master=echo OTM' \
-  > '.*=echo $REPO' \
+  > 'octokitty/testing:main=echo OTM' \
+  > 'hellothere/.+=echo $REPO' \
   > > logs &
 
 Usage:
@@ -54,14 +59,25 @@ Usage:
 Check that it works:
 
   $ POST $TESTDIR/example.json
-  'echo OTM' for octokitty/testing output:
+  'echo OTM' for 'octokitty/testing:main' output:
   OTM
   $ POST $TESTDIR/other.json
-  'echo $REPO' for hellothere/other output:
+  'echo $REPO' for 'hellothere/other:lolster' output:
   hellothere/other
-  $ cat logs
-  [\d/: ]+ 'echo OTM' for octokitty/testing output: OTM (re)
-  [\d/: ]+ 'echo \$REPO' for hellothere/other output: hellothere/other (re)
+  $ LOGS
+  [\d/: ]+ 'echo OTM' for 'octokitty/testing:main' output: OTM (re)
+  [\d/: ]+ 'echo \$REPO' for 'hellothere/other:lolster' output: hellothere/other (re)
+
+Check that errors are correctly processed:
+
+  $ POST nothing
+  unexpected end of JSON input
+  $ POST $TESTDIR/nocommit.json
+  No handlers for 'piranha/unknown:'
+  $ LOGS
+  [\d/: ]+ unexpected end of JSON input (re)
+  [\d/: ]+ No handlers for 'piranha/unknown:' (re)
+ 
 
 Cool down:
 

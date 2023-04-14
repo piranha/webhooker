@@ -86,8 +86,16 @@ func (g *GithubPayload) BranchName() string {
 }
 
 func (g *GithubPayload) EnvData() []string {
-	commit := g.Commits[0]
+	if len(g.Commits) == 0 {
+		return []string{
+			env("REPO", g.RepoName()),
+			env("REPO_URL", g.Repository.Url),
+			env("PRIVATE", fmt.Sprintf("%t", g.Repository.Private)),
+			env("BRANCH", g.Ref),
+		}
+	}
 
+	commit := g.Commits[0]
 	return []string{
 		env("REPO", g.RepoName()),
 		env("REPO_URL", g.Repository.Url),
@@ -127,8 +135,8 @@ func (r *PatRule) Run(data Payload) (string, error) {
 	)
 
 	out, err := cmd.CombinedOutput()
-	log.Printf("'%s' for %s output: %s", r.Command, data.RepoName(), out)
-	return fmt.Sprintf("'%s' for %s output:\n%s", r.Command, data.RepoName(), out), err
+	log.Printf("'%s' for '%s' output: %s", r.Command, GetPath(data), out)
+	return fmt.Sprintf("'%s' for '%s' output:\n%s", r.Command, GetPath(data), out), err
 }
 
 /// actual work
@@ -161,7 +169,7 @@ func (c Config) ExecutePayload(data Payload) (string, error) {
 		}
 	}
 
-	msg := fmt.Sprintf("No handlers for %s", path)
+	msg := fmt.Sprintf("No handlers for '%s'\n", path)
 	log.Print(msg)
 	return msg, nil
 }
