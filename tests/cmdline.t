@@ -15,6 +15,7 @@ webhooker tests init:
   $ ./webhooker -p 1234 \
   > 'octokitty/testing:main=echo OTM' \
   > 'hellothere/.+=echo $REPO' \
+  > 'invalid/command:=does-not-exist' \
   > > logs &
 
 Usage:
@@ -74,9 +75,15 @@ Check that errors are correctly processed:
   unexpected end of JSON input
   $ POST $TESTDIR/nocommit.json
   No handlers for 'piranha/unknown:'
+  $ POST $TESTDIR/cmderror.json
+  'does-not-exist' for 'invalid/command:' output:
+  sh: does-not-exist: command not found
+  
   $ LOGS
   [\d/: ]+ unexpected end of JSON input (re)
   [\d/: ]+ No handlers for 'piranha/unknown:' (re)
+  [\d/: ]+ 'does-not-exist' for 'invalid/command:' output: sh: (1:)? does-not-exist: command not found (re)
+  [\d/: ]+ exit status 127 (re)
  
 
 Cool down:
