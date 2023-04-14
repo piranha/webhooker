@@ -1,4 +1,4 @@
-// (c) 2013-2023 Alexander Solovyov under terms of ISC License
+// (c) 2013-2023 Alexander Solovyov
 
 package main
 
@@ -24,7 +24,7 @@ var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
 	Port      string `short:"p" long:"port"      default:"8000"      description:"port to listen on"`
 	Log       string `short:"l" long:"log"                           description:"path to file for logging"`
-	Config    string `short:"c" long:"config"                        description:"read rules from this file"`
+	Config    string `short:"c" long:"config"                        description:"read rules linewise from this file"`
 	Dump      bool   `short:"d" long:"dump"                          description:"dump rules to console"`
 	Version   bool   `short:"V" long:"version"                       description:"show version and exit"`
 	ShowHelp  bool   `          long:"help"                          description:"show this help message"`

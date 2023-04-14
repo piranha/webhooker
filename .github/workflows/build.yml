@@ -1,0 +1,26 @@
+name: webhooker CI
+on: [push]
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v4
+    - run: go mod download
+    - run: pip install prysk
+    - run: make test
+
+  release:
+    if: github.ref_type == 'tag' && github.repository_owner == 'piranha'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Go
+      uses: actions/setup-go@v4
+    - run: make all
+    - name: Publish release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/*.gz
+        tag_name: ${{ github.ref_name }}

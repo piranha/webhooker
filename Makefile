@@ -1,37 +1,23 @@
-SOURCE = $(wildcard *.go)
+SOURCE = $(wildcard *.go) go.mod go.sum
 TAG ?= $(shell git describe --tags)
-GOBUILD = go build -ldflags '-w'
-
-ALL = $(foreach suffix,win.exe linux osx,\
-		build/webhooker-$(suffix))
-
-all: $(ALL)
-
-clean:
-	rm -f $(ALL)
+GOBUILD = go build -ldflags "-w -X main.Version=${TAG}"
 
 test:
 	go test
 	prysk tests/cmdline.t
 
-win.exe = windows
-osx = darwin
-build/webhooker-%: $(SOURCE)
-	@mkdir -p $(@D)
-	CGO_ENABLED=0 GOOS=$(firstword $($*) $*) GOARCH=amd64 go build -o $@
+clean:
+	rm -f $(ALL)
 
-ifndef desc
-release:
-	@echo "Push a tag and run this as 'make release desc=tralala'"
-else
-release: $(ALL)
-	github-release release -u piranha -r webhooker -t "$(TAG)" -n "$(TAG)" --description "$(desc)"
-	@for x in $(ALL); do \
-		echo "Uploading $$x" && \
-		github-release upload -u piranha \
-                              -r webhooker \
-                              -t $(TAG) \
-                              -f "$$x" \
-                              -n "$$(basename $$x)"; \
-	done
-endif
+win.exe.gz = GOOS=windows GOARCH=amd64
+linux.gz = GOOS=linux GOARCH=amd64
+mac-amd64.gz = GOOS=darwin GOARCH=amd64
+mac-arm64.gz = GOOS=darwin GOARCH=arm64
+build/webhooker-%.gz: $(SOURCE)
+	@mkdir -p $(@D)
+	CGO_ENABLED=0 $($*) $(GOBUILD) -o $(basename $@)
+	gzip $(basename $@)
+
+ALL = $(foreach suffix,mac-arm64 mac-amd64 linux win.exe,\
+		build/webhooker-$(suffix).gz)
+all: $(ALL)

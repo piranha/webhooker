@@ -1,4 +1,4 @@
-// (c) 2013 Alexander Solovyov under terms of ISC License
+// (c) 2013 Alexander Solovyov
 
 package main
 
