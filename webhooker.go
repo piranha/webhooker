@@ -53,15 +53,14 @@ type Config []Rule
 /// Github types
 
 type GithubUser struct {
-	Name  string
-	Email string
+	Name string
 }
 
 type GithubRepo struct {
-	Name    string
-	Url     string
-	Private bool
-	Owner   GithubUser
+	FullName string `json:"full_name"`
+	Name     string
+	Url      string
+	Private  bool
 }
 
 type GithubCommit struct {
@@ -79,7 +78,7 @@ type GithubPayload struct {
 }
 
 func (g *GithubPayload) RepoName() string {
-	return g.Repository.Owner.Name + "/" + g.Repository.Name
+	return g.Repository.FullName
 }
 
 func (g *GithubPayload) BranchName() string {

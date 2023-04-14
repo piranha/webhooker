@@ -30,8 +30,8 @@ func TestRunIsCalled(t *testing.T) {
 	data := &GithubPayload{
 		Ref: "refs/heads/master",
 		Repository: GithubRepo{
-			Name:  "webhooker",
-			Owner: GithubUser{Name: "piranha"},
+			Name:     "webhooker",
+			FullName: "piranha/webhooker",
 		},
 	}
 

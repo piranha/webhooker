@@ -2,9 +2,7 @@
     "ref":"refs/heads/lolster",
     "repository": {
         "name":"other",
-        "owner":{
-            "name":"hellothere"
-        }
+        "full_name": "hellothere/other"
     },
     "commits":[
         {
