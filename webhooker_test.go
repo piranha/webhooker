@@ -28,7 +28,7 @@ func (r *MockedRule) Run(data Payload) (string, error) {
 
 func TestRunIsCalled(t *testing.T) {
 	data := &GithubPayload{
-		Ref: "refs/heads/master",
+		Ref: "refs/heads/main",
 		Repository: GithubRepo{
 			Name:     "webhooker",
 			FullName: "piranha/webhooker",
@@ -39,7 +39,7 @@ func TestRunIsCalled(t *testing.T) {
 		Pattern: "nothing",
 	}
 	right := &MockedRule{
-		Pattern: "piranha/webhooker:master",
+		Pattern: "piranha/webhooker:main",
 	}
 
 	wrong.On("Match", GetPath(data)).Return(false)

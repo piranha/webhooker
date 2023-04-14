@@ -18,7 +18,7 @@ or something like this.
 You run it like this (see `webhooker --help` to get more help):
 
 ```
-webhooker -p 3434 -i 127.0.0.1 piranha/webhooker:master='echo $COMMIT'
+webhooker -p 3434 -i 127.0.0.1 piranha/webhooker:main='echo $COMMIT'
 ```
 
 It runs every command in `sh`, so you can use more complex commands (with `&&`
