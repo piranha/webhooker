@@ -22,7 +22,7 @@ var Version = "tip" // replaced during build
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
-	Port      string `short:"p" long:"port"      default:"8000"      description:"port to listen on"`
+	Port      string `short:"p" long:"port"      default:"3434"      description:"port to listen on"`
 	Log       string `short:"l" long:"log"                           description:"path to file for logging"`
 	Config    string `short:"c" long:"config"                        description:"read rules linewise from this file"`
 	Dump      bool   `short:"d" long:"dump"                          description:"dump rules to console"`

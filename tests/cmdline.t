@@ -44,7 +44,7 @@ Usage:
   
   Application Options:
     -i, --interface= ip to listen on (default: 127.0.0.1)
-    -p, --port=      port to listen on (default: 8000)
+    -p, --port=      port to listen on (default: 3434)
     -l, --log=       path to file for logging
     -c, --config=    read rules linewise from this file
     -d, --dump       dump rules to console

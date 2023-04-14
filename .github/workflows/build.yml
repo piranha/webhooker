@@ -12,6 +12,7 @@ jobs:
     - run: make test
 
   release:
+    needs: tests
     if: github.ref_type == 'tag' && github.repository_owner == 'piranha'
     runs-on: ubuntu-latest
     steps:

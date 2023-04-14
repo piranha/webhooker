@@ -6,16 +6,19 @@ An application to run shell commands on incoming WebHooks from Github.
 
 ## Installation
 
-Install it with `go get github.com/piranha/webhooker` or download a binary from
-[releases page](https://github.com/piranha/webhooker/releases).
+```
+cd /usr/local/bin
+curl -sL https://github.com/piranha/webhooker/releases/download/1.0/webhooker-linux.gz | gunzip > webhooker && chmod +x webhooker
+```
+
+or something like this.
 
 ## Usage
 
-You run it like this (run webhooker without arguments to get help - you could
-also put all rules in a separate config file):
+You run it like this (see `webhooker --help` to get more help):
 
 ```
-./webhooker -p 3456 -i 127.0.0.1 piranha/webhooker:master='echo $COMMIT'
+webhooker -p 3434 -i 127.0.0.1 piranha/webhooker:master='echo $COMMIT'
 ```
 
 It runs every command in `sh`, so you can use more complex commands (with `&&`
@@ -24,14 +27,40 @@ and `|`).
 `user/repo:branch` pattern is a regular expression, so you could do
 `user/project:fix.*=cmd` or even `.*=cmd`.
 
+You can put all your configuration in a file line-by-line and then run like
+`webhooker -c this-file`.
+
 ## Running
+
+Maybe you want (like I do) to run this with systemd, create
+`/etc/systemd/system/webhooker.service` with the following content:
+
+```
+[Unit]
+Description=webhooker
+
+[Service]
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=webhooker
+User=piranha
+Group=piranha
+ExecStart=/usr/local/bin/webhooker -p 3434 \
+    user/repo:main='cd /opt/repo && git fetch -q && git reset --hard origin/main && restart it or something'
+
+[Install]
+WantedBy=default.target
+```
+
+And then tell systemd to pick it up: `systemctl daemon-reload && systemctl start
+webhooker && systemctl enable webhooker`.
 
 I expect you to run it behind your HTTP proxy of choice, and in my case it's
 nginx and such config is used to protect it from unwanted requests:
 
 ```
     location /webhook {
-        proxy_pass http://localhost:3456;
+        proxy_pass http://localhost:3434;
         allow 204.232.175.64/27;
         allow 192.30.252.0/22;
         deny all;
@@ -45,7 +74,7 @@ Or in caddy:
     remote_ip 192.30.252.0/22 185.199.108.0/22 140.82.112.0/20
     path /webhook
   }
-  reverse_proxy @webhook localhost:3456
+  reverse_proxy @webhook localhost:3434
 ```
 
 After that I can put `http://domain.my/webhook` in Github's repo settings
@@ -67,28 +96,3 @@ webhooker provides your commands with some variables in case you need them:
 
 And, of course, it passes through some common variables: `$PATH`, `$HOME`,
 `$USER`.
-
-## Example
-
-I render my own sites using `webhooker`. Using systemd you can put that in `/etc/systemd/system/webhooker.service`:
-
-```
-[Unit]
-Description=webhooker
-
-[Service]
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=webhooker
-User=piranha
-Group=piranha
-Environment="CACHE_DIR=/home/piranha/bin"
-ExecStart=/usr/local/bin/webhooker -p 3456 -i 127.0.0.1 \
-	piranha/solovyov.net:master='cd /opt/solovyov.net && git pull -q && make'
-
-[Install]
-WantedBy=default.target
-```
-
-You can see that it updates and renders site on push. Run `systemctl
-daemon-reload && systemctl start webhooker` to run this stuff.
