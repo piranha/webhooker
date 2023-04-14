@@ -12,7 +12,7 @@ clean:
 
 test:
 	go test
-	cram tests/cram.t
+	prysk tests/cmdline.t
 
 win.exe = windows
 osx = darwin

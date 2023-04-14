@@ -1,4 +1,4 @@
-// (c) 2013-2020 Alexander Solovyov under terms of ISC License
+// (c) 2013-2023 Alexander Solovyov under terms of ISC License
 
 package main
 
@@ -18,7 +18,7 @@ import (
 
 /// Globals
 
-var Version = "0.4"
+var Version = "tip" // replaced during build
 
 var opts struct {
 	Interface string `short:"i" long:"interface" default:"127.0.0.1" description:"ip to listen on"`
@@ -79,7 +79,7 @@ type GithubPayload struct {
 }
 
 func (g *GithubPayload) RepoName() string {
-	return g.Repository.Owner.Name+"/"+g.Repository.Name
+	return g.Repository.Owner.Name + "/" + g.Repository.Name
 }
 
 func (g *GithubPayload) BranchName() string {
@@ -125,7 +125,7 @@ func (r *PatRule) Run(data Payload) (string, error) {
 		env("PATH", os.Getenv("PATH")),
 		env("HOME", os.Getenv("HOME")),
 		env("USER", os.Getenv("USER")),
-		)
+	)
 
 	out, err := cmd.CombinedOutput()
 	log.Printf("'%s' for %s output: %s", r.Command, data.RepoName(), out)
@@ -237,6 +237,11 @@ environment contains:
 Also never forget to properly escape your rule, if you pass it through command
 line: usually enclosing it in single quotes (') is enough.
 `
+
+	if opts.Version {
+		println("webhooker", Version)
+		return
+	}
 
 	if opts.ShowHelp || (len(args) == 0 && opts.Config == "") {
 		argparser.WriteHelp(os.Stdout)

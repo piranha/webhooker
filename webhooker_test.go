@@ -3,8 +3,8 @@
 package main
 
 import (
-	"testing"
 	"github.com/stretchr/testify/mock"
+	"testing"
 )
 
 type MockedRule struct {
@@ -30,7 +30,7 @@ func TestRunIsCalled(t *testing.T) {
 	data := &GithubPayload{
 		Ref: "refs/heads/master",
 		Repository: GithubRepo{
-			Name: "webhooker",
+			Name:  "webhooker",
 			Owner: GithubUser{Name: "piranha"},
 		},
 	}
