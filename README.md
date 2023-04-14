@@ -8,7 +8,7 @@ An application to run shell commands on incoming WebHooks from Github.
 
 ```
 cd /usr/local/bin
-curl -sL https://github.com/piranha/webhooker/releases/download/1.0/webhooker-linux.gz | gunzip > webhooker && chmod +x webhooker
+curl -sL https://github.com/piranha/webhooker/releases/download/1.2/webhooker-linux.gz | gunzip > webhooker && chmod +x webhooker
 ```
 
 or something like this.
