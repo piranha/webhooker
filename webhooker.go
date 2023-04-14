@@ -91,7 +91,6 @@ func (g *GithubPayload) EnvData() []string {
 			env("REPO", g.RepoName()),
 			env("REPO_URL", g.Repository.Url),
 			env("PRIVATE", fmt.Sprintf("%t", g.Repository.Private)),
-			env("BRANCH", g.Ref),
 		}
 	}
 
@@ -100,7 +99,8 @@ func (g *GithubPayload) EnvData() []string {
 		env("REPO", g.RepoName()),
 		env("REPO_URL", g.Repository.Url),
 		env("PRIVATE", fmt.Sprintf("%t", g.Repository.Private)),
-		env("BRANCH", g.Ref),
+		env("REF", g.Ref),
+		env("BRANCH", g.BranchName()),
 		env("COMMIT", commit.Id),
 		env("COMMIT_MESSAGE", commit.Message),
 		env("COMMIT_TIME", commit.Timestamp),
