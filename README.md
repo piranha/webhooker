@@ -2,8 +2,6 @@
 
 An application to run shell commands on incoming WebHooks from Github.
 
-[![Build Status](https://travis-ci.org/piranha/webhooker.png)](https://travis-ci.org/piranha/webhooker)
-
 ## Installation
 
 ```
